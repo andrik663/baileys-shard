@@ -38,6 +38,9 @@ export async function DELETE(
 
     await manager.stopShard(id);
     dashboardState.updateShard(id, { status: "stopped" });
+    // Clear any pending QR / pairing data so the card stops showing them.
+    dashboardState.qrCodes.delete(id);
+    dashboardState.pairingCodes.delete(id);
     dashboardState.addLog({
       shardId: id,
       event: "shard.stop",
@@ -79,10 +82,15 @@ export async function PATCH(
       });
       dashboardState.updateShard(id, { status: "initializing" });
 
+      // Clear the stopped flag so the shard can reconnect.
+      if (typeof manager.clearStoppedFlag === "function") {
+        manager.clearStoppedFlag(id);
+      }
+
       await manager.recreateShard({
         id,
         clearSession: clearSession ?? false,
-        forceRecreate: forceRecreate ?? false,
+        forceRecreate: true,
         ...(phoneNumber ? { phoneNumber } : {}),
       });
 

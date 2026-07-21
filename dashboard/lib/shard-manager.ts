@@ -140,6 +140,13 @@ async function bootstrapManager() {
     // ── Event bindings ──────────────────────────────────────────────────────
 
     manager.on("login.update", ({ shardId, state, type, code, image }: any) => {
+      if (state === "stopped") {
+        dashboardState.updateShard(shardId, { status: "stopped" });
+        dashboardState.qrCodes.delete(shardId);
+        dashboardState.pairingCodes.delete(shardId);
+        return;
+      }
+
       dashboardState.updateShard(shardId, {
         status:
           state === "connected"
@@ -268,7 +275,7 @@ async function bootstrapManager() {
     });
 
     manager.on("shard.error", ({ shardId, error }: any) => {
-      dashboardState.updateShard(shardId ?? "unknown", { status: "error" as any });
+      dashboardState.updateShard(shardId ?? "unknown", { status: "error" });
       dashboardState.addLog({
         shardId: shardId ?? null,
         event: "shard.error",

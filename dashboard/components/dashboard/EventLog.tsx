@@ -135,8 +135,8 @@ export default function EventLog({ logs, onClear }: Props) {
         </div>
 
         {/* Filter row */}
-        <div className="flex gap-2 flex-wrap">
-          <div className="relative flex-1 min-w-36">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
             <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               value={search}
@@ -145,40 +145,42 @@ export default function EventLog({ logs, onClear }: Props) {
               className="h-7 pl-7 text-xs bg-muted/30 border-border/60"
             />
           </div>
-          <Select value={levelFilter} onValueChange={(v) => setLevelFilter(v ?? "all")}>
-            <SelectTrigger className="h-7 w-28 text-xs bg-muted/30 border-border/60">
-              <SelectValue placeholder="Level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">All Levels</SelectItem>
-              <SelectItem value="success" className="text-xs">Success</SelectItem>
-              <SelectItem value="info" className="text-xs">Info</SelectItem>
-              <SelectItem value="warn" className="text-xs">Warn</SelectItem>
-              <SelectItem value="error" className="text-xs">Error</SelectItem>
-            </SelectContent>
-          </Select>
-          {shardIds.length > 0 && (
-            <Select value={shardFilter} onValueChange={(v) => setShardFilter(v ?? "all")}>
-              <SelectTrigger className="h-7 w-32 text-xs bg-muted/30 border-border/60">
-                <SelectValue placeholder="Shard" />
+          <div className="flex gap-2">
+            <Select value={levelFilter} onValueChange={(v) => setLevelFilter(v ?? "all")}>
+              <SelectTrigger className="h-7 flex-1 sm:w-28 text-xs bg-muted/30 border-border/60">
+                <SelectValue placeholder="Level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="text-xs">All Shards</SelectItem>
-                {shardIds.map((id) => (
-                  <SelectItem key={id} value={id} className="text-xs font-mono">
-                    {id}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all" className="text-xs">All Levels</SelectItem>
+                <SelectItem value="success" className="text-xs">Success</SelectItem>
+                <SelectItem value="info" className="text-xs">Info</SelectItem>
+                <SelectItem value="warn" className="text-xs">Warn</SelectItem>
+                <SelectItem value="error" className="text-xs">Error</SelectItem>
               </SelectContent>
             </Select>
-          )}
+            {shardIds.length > 0 && (
+              <Select value={shardFilter} onValueChange={(v) => setShardFilter(v ?? "all")}>
+                <SelectTrigger className="h-7 flex-1 sm:w-32 text-xs bg-muted/30 border-border/60">
+                  <SelectValue placeholder="Shard" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">All Shards</SelectItem>
+                  {shardIds.map((id) => (
+                    <SelectItem key={id} value={id} className="text-xs font-mono">
+                      {id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="p-0 flex-1 relative">
         <div
           ref={scrollContainerRef}
-          className="h-80 overflow-y-auto divide-y divide-border/30"
+          className="h-64 sm:h-80 overflow-y-auto divide-y divide-border/30"
         >
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 py-10">
@@ -231,7 +233,7 @@ export default function EventLog({ logs, onClear }: Props) {
                     )}
                   </div>
 
-                  <span className="text-[11px] text-muted-foreground flex-shrink-0 tabular-nums pt-0.5">
+                  <span className="text-[10px] sm:text-[11px] text-muted-foreground flex-shrink-0 tabular-nums pt-0.5 hidden xs:block">
                     {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}
                   </span>
                 </div>
