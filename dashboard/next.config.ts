@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {},
   serverExternalPackages: [
     "baileys",
     "@whiskeysockets/baileys",
@@ -8,18 +9,9 @@ const nextConfig: NextConfig = {
     "qr-image",
     "qrcode",
     "glob",
+    "sharp",
+    "canvas",
   ],
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Baileys uses native bindings in some optional deps — ignore them
-      config.externals = [
-        ...(Array.isArray(config.externals) ? config.externals : []),
-        "sharp",
-        "canvas",
-      ];
-    }
-    return config;
-  },
 };
 
 export default nextConfig;
