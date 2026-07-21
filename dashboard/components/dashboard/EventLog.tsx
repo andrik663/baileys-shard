@@ -49,8 +49,11 @@ export default function EventLog({ logs, onClear }: Props) {
   const [levelFilter, setLevelFilter] = useState<string>("all");
   const [shardFilter, setShardFilter] = useState<string>("all");
   const [autoScroll, setAutoScroll] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // logs are stored newest-first; display oldest-first
   const displayed = [...logs].reverse();
@@ -158,7 +161,7 @@ export default function EventLog({ logs, onClear }: Props) {
                 <SelectItem value="error" className="text-xs">Error</SelectItem>
               </SelectContent>
             </Select>
-            {shardIds.length > 0 && (
+            {mounted && shardIds.length > 0 && (
               <Select value={shardFilter} onValueChange={(v) => setShardFilter(v ?? "all")}>
                 <SelectTrigger className="h-7 flex-1 sm:w-32 text-xs bg-muted/30 border-border/60">
                   <SelectValue placeholder="Shard" />
@@ -234,7 +237,9 @@ export default function EventLog({ logs, onClear }: Props) {
                   </div>
 
                   <span className="text-[10px] sm:text-[11px] text-muted-foreground flex-shrink-0 tabular-nums pt-0.5 hidden xs:block">
-                    {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}
+                    {mounted
+                      ? formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })
+                      : "—"}
                   </span>
                 </div>
               );

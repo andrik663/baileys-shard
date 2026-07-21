@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -146,6 +146,9 @@ export default function ShardCard({
   onDelete,
 }: Props) {
   const [showQR, setShowQR] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const cfg: StatusCfgExtended = STATUS_CONFIG[shard.status as keyof typeof STATUS_CONFIG] ?? FALLBACK;
   const StatusIcon = cfg.icon;
   const isBusy = shard.status === "initializing" || shard.status === "connecting";
@@ -285,7 +288,9 @@ export default function ShardCard({
           <div className="flex items-center gap-1">
             <Clock size={8} className="text-muted-foreground flex-shrink-0" />
             <p className="font-mono text-[10px] font-semibold text-foreground truncate">
-              {formatDistanceToNow(new Date(shard.updatedAt), { addSuffix: true })}
+              {mounted
+                ? formatDistanceToNow(new Date(shard.updatedAt), { addSuffix: true })
+                : "—"}
             </p>
           </div>
         </div>
