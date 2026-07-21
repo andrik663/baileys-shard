@@ -207,16 +207,18 @@ export default function ShardCard({
             </Badge>
 
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 text-muted-foreground/60 hover:text-foreground hover:bg-surface-2 flex-shrink-0"
-                >
-                  <MoreHorizontal size={12} />
-                  <span className="sr-only">More actions</span>
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0 text-muted-foreground/60 hover:text-foreground hover:bg-surface-2 flex-shrink-0"
+                  >
+                    <MoreHorizontal size={12} />
+                    <span className="sr-only">More actions</span>
+                  </Button>
+                }
+              />
               <DropdownMenuContent align="end" className="w-48 text-xs">
                 <DropdownMenuItem
                   className="text-xs gap-2 cursor-pointer"
@@ -321,51 +323,57 @@ export default function ShardCard({
       <div className="px-4 pb-4 mt-auto">
         <div className="flex items-center gap-1.5">
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 h-7 text-[11px] gap-1.5 border-border/50 bg-surface hover:bg-surface-2 font-mono"
-                onClick={() => onReconnect(shard.id)}
-                disabled={isBusy}
-              >
-                <RefreshCw size={10} />
-                Reconnect
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 h-7 text-[11px] gap-1.5 border-border/50 bg-surface hover:bg-surface-2 font-mono"
+                  onClick={() => onReconnect(shard.id)}
+                  disabled={isBusy}
+                >
+                  <RefreshCw size={10} />
+                  Reconnect
+                </Button>
+              }
+            />
             <TooltipContent side="bottom" className="text-xs">
               Reconnect shard — keeps existing session
             </TooltipContent>
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 w-7 p-0 border-border/50 bg-surface hover:bg-destructive/15 hover:border-destructive/40 hover:text-destructive text-muted-foreground"
-                onClick={() => onStop(shard.id)}
-                disabled={shard.status === "stopped"}
-              >
-                <StopCircle size={11} />
-                <span className="sr-only">Stop</span>
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 w-7 p-0 border-border/50 bg-surface hover:bg-destructive/15 hover:border-destructive/40 hover:text-destructive text-muted-foreground"
+                  onClick={() => onStop(shard.id)}
+                  disabled={shard.status === "stopped"}
+                >
+                  <StopCircle size={11} />
+                  <span className="sr-only">Stop</span>
+                </Button>
+              }
+            />
             <TooltipContent side="bottom" className="text-xs">Stop shard</TooltipContent>
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 w-7 p-0 border-border/50 bg-surface hover:bg-surface-2 text-muted-foreground hover:text-foreground"
-                onClick={() => onDelete(shard.id)}
-              >
-                <Trash2 size={11} />
-                <span className="sr-only">Clean session</span>
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 w-7 p-0 border-border/50 bg-surface hover:bg-surface-2 text-muted-foreground hover:text-foreground"
+                  onClick={() => onDelete(shard.id)}
+                >
+                  <Trash2 size={11} />
+                  <span className="sr-only">Clean session</span>
+                </Button>
+              }
+            />
             <TooltipContent side="bottom" className="text-xs">Clean session files</TooltipContent>
           </Tooltip>
         </div>
