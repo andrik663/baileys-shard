@@ -187,7 +187,7 @@ export default function DashboardPage() {
 
         {/* Main tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-muted/40 h-8 gap-0.5">
+          <TabsList className="bg-muted/40 h-8 gap-0.5 max-w-full flex-wrap justify-start">
             <TabsTrigger value="shards" className="text-xs h-7 gap-1.5">
               <Layers size={13} />
               Shards
@@ -251,7 +251,7 @@ export default function DashboardPage() {
 
           {/* Sessions inspector */}
           <TabsContent value="sessions" className="mt-4">
-            <div className="max-w-xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <SessionInfoPanel shards={shards} />
             </div>
           </TabsContent>

@@ -2,11 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: [
+    "baileys-shard",
     "baileys",
+    "@whiskeysockets/baileys",
     "pino",
     "qr-image",
+    "qrcode",
     "glob",
-    "@whiskeysockets/baileys",
   ],
   webpack: (config, { isServer }) => {
     if (isServer) {

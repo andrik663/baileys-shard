@@ -126,7 +126,7 @@ async function bootstrapManager() {
 
   try {
     // Dynamic import so baileys (which has native modules) only loads server-side
-    const { ShardManager } = await import("../src/index");
+    const { ShardManager } = await import("baileys-shard");
     const manager = new ShardManager({ session: "./sessions" });
     dashboardState.manager = manager;
 

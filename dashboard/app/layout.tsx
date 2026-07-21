@@ -20,23 +20,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#0d0f14",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
-        <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+      <body className="min-h-full flex flex-col bg-background text-foreground font-sans antialiased">
+        <TooltipProvider delayDuration={250}>{children}</TooltipProvider>
       </body>
     </html>
   );

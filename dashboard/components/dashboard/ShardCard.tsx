@@ -10,6 +10,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Wifi,
   WifiOff,
   Loader2,
@@ -23,6 +30,10 @@ import {
   KeyRound,
   ChevronDown,
   ChevronUp,
+  MoreHorizontal,
+  MessageSquare,
+  ShieldOff,
+  Zap,
 } from "lucide-react";
 import type { ShardStatus } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
@@ -39,117 +50,196 @@ interface Props {
 const STATUS_CONFIG = {
   connected: {
     label: "Connected",
-    color: "bg-[oklch(0.62_0.17_148)]/15 text-[oklch(0.62_0.17_148)] border-[oklch(0.62_0.17_148)]/30",
-    dot: "bg-[oklch(0.62_0.17_148)]",
+    color: "text-primary border-primary/30 bg-primary/10",
+    dot: "bg-primary",
     icon: Wifi,
     pulse: true,
+    glow: "shadow-[0_0_0_1px_oklch(0.625_0.172_148/20%)]",
   },
   disconnected: {
     label: "Disconnected",
-    color: "bg-destructive/15 text-destructive border-destructive/30",
+    color: "text-destructive border-destructive/30 bg-destructive/10",
     dot: "bg-destructive",
     icon: WifiOff,
     pulse: false,
+    glow: "",
   },
   initializing: {
     label: "Initializing",
-    color: "bg-[oklch(0.65_0.20_60)]/15 text-[oklch(0.65_0.20_60)] border-[oklch(0.65_0.20_60)]/30",
-    dot: "bg-[oklch(0.65_0.20_60)]",
-    icon: Loader2,
+    color: "text-[oklch(0.66_0.195_60)] border-[oklch(0.66_0.195_60)]/30 bg-[oklch(0.66_0.195_60)]/10",
+    dot: "bg-[oklch(0.66_0.195_60)]",
+    icon: Zap,
     pulse: true,
+    glow: "",
   },
   connecting: {
     label: "Connecting",
-    color: "bg-[oklch(0.65_0.20_60)]/15 text-[oklch(0.65_0.20_60)] border-[oklch(0.65_0.20_60)]/30",
-    dot: "bg-[oklch(0.65_0.20_60)]",
+    color: "text-[oklch(0.66_0.195_60)] border-[oklch(0.66_0.195_60)]/30 bg-[oklch(0.66_0.195_60)]/10",
+    dot: "bg-[oklch(0.66_0.195_60)]",
     icon: Loader2,
     pulse: true,
+    glow: "",
   },
   logged_out: {
     label: "Logged Out",
-    color: "bg-[oklch(0.60_0.18_300)]/15 text-[oklch(0.60_0.18_300)] border-[oklch(0.60_0.18_300)]/30",
-    dot: "bg-[oklch(0.60_0.18_300)]",
+    color: "text-[oklch(0.59_0.18_300)] border-[oklch(0.59_0.18_300)]/30 bg-[oklch(0.59_0.18_300)]/10",
+    dot: "bg-[oklch(0.59_0.18_300)]",
     icon: LogOut,
     pulse: false,
+    glow: "",
   },
   stopped: {
     label: "Stopped",
-    color: "bg-muted text-muted-foreground border-border",
+    color: "text-muted-foreground border-border bg-muted/40",
     dot: "bg-muted-foreground",
     icon: StopCircle,
     pulse: false,
+    glow: "",
   },
   error: {
     label: "Error",
-    color: "bg-destructive/15 text-destructive border-destructive/30",
+    color: "text-destructive border-destructive/30 bg-destructive/10",
     dot: "bg-destructive",
     icon: WifiOff,
     pulse: false,
+    glow: "",
   },
 } as const;
 
-export default function ShardCard({ shard, qrImage, pairingCode, onStop, onReconnect, onDelete }: Props) {
+export default function ShardCard({
+  shard,
+  qrImage,
+  pairingCode,
+  onStop,
+  onReconnect,
+  onDelete,
+}: Props) {
   const [showQR, setShowQR] = useState(false);
-  const config = STATUS_CONFIG[shard.status] ?? STATUS_CONFIG.stopped;
+  const config = STATUS_CONFIG[shard.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.stopped;
   const StatusIcon = config.icon;
-  const isSpinning = shard.status === "initializing" || shard.status === "connecting";
+  const isSpinning = shard.status === "connecting";
+  const isBusy = shard.status === "initializing" || shard.status === "connecting";
+  const isConnected = shard.status === "connected";
 
   return (
-    <Card className="bg-card border-border/60 flex flex-col">
-      <CardHeader className="pb-3 pt-4 px-4">
+    <Card
+      className={`bg-card border-border flex flex-col transition-all duration-200 hover:border-border/80 ${isConnected ? config.glow : ""}`}
+    >
+      <CardHeader className="pb-2 pt-3.5 px-4">
+        {/* Top row: ID + status + menu */}
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${config.dot} ${config.pulse ? "pulse-dot" : ""}`} />
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div
+              className={`w-2 h-2 rounded-full flex-shrink-0 mt-0.5 ${config.dot} ${config.pulse ? "pulse-dot" : ""}`}
+            />
             <div className="min-w-0">
-              <p className="font-semibold text-sm font-mono text-foreground truncate">{shard.id}</p>
-              {shard.phoneNumber && (
+              <p className="font-semibold text-sm font-mono text-foreground truncate leading-tight">
+                {shard.id}
+              </p>
+              {shard.phoneNumber ? (
                 <div className="flex items-center gap-1 mt-0.5">
-                  <Phone size={10} className="text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-mono truncate">{shard.phoneNumber}</span>
+                  <Phone size={9} className="text-muted-foreground flex-shrink-0" />
+                  <span className="text-[11px] text-muted-foreground font-mono truncate">
+                    {shard.phoneNumber}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] text-muted-foreground">No phone number</span>
                 </div>
               )}
             </div>
           </div>
-          <Badge
-            variant="outline"
-            className={`text-xs px-2 py-0.5 flex-shrink-0 flex items-center gap-1.5 ${config.color}`}
-          >
-            <StatusIcon size={11} className={isSpinning ? "animate-spin" : ""} />
-            {config.label}
-          </Badge>
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <Badge
+              variant="outline"
+              className={`text-[11px] px-1.5 py-0 h-5 flex items-center gap-1 ${config.color}`}
+            >
+              <StatusIcon size={10} className={isSpinning ? "animate-spin" : ""} />
+              {config.label}
+            </Badge>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground flex-shrink-0"
+                >
+                  <MoreHorizontal size={13} />
+                  <span className="sr-only">More actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 text-xs">
+                <DropdownMenuItem
+                  className="text-xs gap-2"
+                  onClick={() => onReconnect(shard.id)}
+                  disabled={isBusy}
+                >
+                  <RefreshCw size={12} />
+                  Reconnect
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-xs gap-2 text-[oklch(0.66_0.195_60)]"
+                  onClick={() => onReconnect(shard.id, true)}
+                  disabled={isBusy}
+                >
+                  <ShieldOff size={12} />
+                  Reconnect &amp; Clear Session
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-xs gap-2 text-destructive focus:text-destructive"
+                  onClick={() => onStop(shard.id)}
+                  disabled={shard.status === "stopped"}
+                >
+                  <StopCircle size={12} />
+                  Stop Shard
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-xs gap-2 text-destructive focus:text-destructive"
+                  onClick={() => onDelete(shard.id)}
+                >
+                  <Trash2 size={12} />
+                  Clean Session Files
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-4 pb-4 flex-1 flex flex-col gap-3">
-        {/* Metadata */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="bg-muted/40 rounded-md px-2.5 py-1.5">
-            <p className="text-muted-foreground mb-0.5">Index</p>
-            <p className="font-mono font-medium text-foreground">{shard.index}</p>
+      <CardContent className="px-4 pb-4 flex-1 flex flex-col gap-2.5">
+        {/* Meta row */}
+        <div className="grid grid-cols-2 gap-1.5">
+          <div className="rounded bg-muted/40 px-2.5 py-1.5 text-xs">
+            <p className="text-muted-foreground text-[10px] uppercase tracking-wide mb-0.5">Index</p>
+            <p className="font-mono font-semibold text-foreground">{shard.index} / {shard.total || "?"}</p>
           </div>
-          <div className="bg-muted/40 rounded-md px-2.5 py-1.5">
-            <p className="text-muted-foreground mb-0.5">Updated</p>
+          <div className="rounded bg-muted/40 px-2.5 py-1.5 text-xs">
+            <p className="text-muted-foreground text-[10px] uppercase tracking-wide mb-0.5">Updated</p>
             <div className="flex items-center gap-1">
-              <Clock size={10} className="text-muted-foreground" />
-              <p className="font-mono font-medium text-foreground truncate">
+              <Clock size={9} className="text-muted-foreground flex-shrink-0" />
+              <p className="font-mono font-semibold text-foreground truncate text-[11px]">
                 {formatDistanceToNow(new Date(shard.updatedAt), { addSuffix: true })}
               </p>
             </div>
           </div>
         </div>
 
-        {/* QR / Pairing codes */}
+        {/* QR code section */}
         {qrImage && (
-          <div className="rounded-md border border-border/60 overflow-hidden">
+          <div className="rounded border border-border overflow-hidden">
             <button
               onClick={() => setShowQR(!showQR)}
-              className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium hover:bg-muted/40 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-medium hover:bg-muted/30 transition-colors"
             >
-              <span className="flex items-center gap-1.5 text-[oklch(0.55_0.15_200)]">
-                <QrCode size={13} />
-                QR Code Ready — Scan to Connect
+              <span className="flex items-center gap-1.5 text-[oklch(0.56_0.155_205)]">
+                <QrCode size={12} />
+                QR Code — Scan to Connect
               </span>
-              {showQR ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              {showQR ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             </button>
             {showQR && (
               <div className="p-3 bg-white flex justify-center">
@@ -157,40 +247,43 @@ export default function ShardCard({ shard, qrImage, pairingCode, onStop, onRecon
                 <img
                   src={`data:image/png;base64,${qrImage}`}
                   alt={`QR code for shard ${shard.id}`}
-                  className="w-40 h-40 object-contain"
+                  className="w-36 h-36 object-contain"
                 />
               </div>
             )}
           </div>
         )}
 
+        {/* Pairing code section */}
         {pairingCode && (
-          <div className="rounded-md border border-[oklch(0.60_0.18_300)]/30 bg-[oklch(0.60_0.18_300)]/10 px-3 py-2.5">
+          <div className="rounded border border-[oklch(0.59_0.18_300)]/30 bg-[oklch(0.59_0.18_300)]/8 px-3 py-2.5">
             <div className="flex items-center gap-1.5 mb-1">
-              <KeyRound size={12} className="text-[oklch(0.60_0.18_300)]" />
-              <span className="text-xs text-[oklch(0.60_0.18_300)] font-medium">Pairing Code</span>
+              <KeyRound size={11} className="text-[oklch(0.59_0.18_300)]" />
+              <span className="text-[11px] text-[oklch(0.59_0.18_300)] font-medium">Pairing Code</span>
             </div>
-            <p className="font-mono text-lg font-bold tracking-widest text-foreground">{pairingCode}</p>
-            <p className="text-xs text-muted-foreground mt-1">Enter in WhatsApp &rarr; Linked Devices</p>
+            <p className="font-mono text-base font-bold tracking-[0.3em] text-foreground">{pairingCode}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              WhatsApp &rarr; Linked Devices &rarr; Link a Device
+            </p>
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-1.5 pt-1 mt-auto">
+        {/* Action bar */}
+        <div className="flex items-center gap-1.5 mt-auto pt-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 h-7 text-xs gap-1.5"
+                className="flex-1 h-7 text-xs gap-1.5 border-border/60"
                 onClick={() => onReconnect(shard.id)}
-                disabled={shard.status === "initializing" || shard.status === "connecting"}
+                disabled={isBusy}
               >
-                <RefreshCw size={12} />
+                <RefreshCw size={11} />
                 Reconnect
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Reconnect shard (keeps session)</TooltipContent>
+            <TooltipContent>Reconnect shard (keeps existing session)</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -198,26 +291,12 @@ export default function ShardCard({ shard, qrImage, pairingCode, onStop, onRecon
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 px-2 text-xs gap-1 text-[oklch(0.65_0.20_60)] border-[oklch(0.65_0.20_60)]/30 hover:bg-[oklch(0.65_0.20_60)]/10"
-                onClick={() => onReconnect(shard.id, true)}
-                disabled={shard.status === "initializing" || shard.status === "connecting"}
-              >
-                <Trash2 size={12} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Reconnect &amp; clear session</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 px-2 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                className="h-7 w-7 p-0 border-border/60 text-destructive hover:bg-destructive/10 hover:border-destructive/40"
                 onClick={() => onStop(shard.id)}
                 disabled={shard.status === "stopped"}
               >
                 <StopCircle size={12} />
+                <span className="sr-only">Stop</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Stop shard</TooltipContent>
@@ -228,13 +307,14 @@ export default function ShardCard({ shard, qrImage, pairingCode, onStop, onRecon
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 px-2 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                className="h-7 w-7 p-0 border-border/60 text-muted-foreground hover:text-foreground"
                 onClick={() => onDelete(shard.id)}
               >
                 <Trash2 size={12} />
+                <span className="sr-only">Clean session</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Delete &amp; clean session</TooltipContent>
+            <TooltipContent>Clean session files</TooltipContent>
           </Tooltip>
         </div>
       </CardContent>

@@ -12,9 +12,12 @@
     "default": "./dist/index.cjs"
   },
   "scripts": {
+    "dev": "cd dashboard && npm run dev",
+    "build": "tsup && cd dashboard && npm run build",
+    "start": "cd dashboard && npm start",
+    "lib:build": "tsup",
     "test": "node /test/test.js",
-    "clean": "rm -rf dist && echo '\n\nDist directory has been cleaned.\n\n'",
-    "build": "tsup"
+    "clean": "rm -rf dist && echo '\n\nDist directory has been cleaned.\n\n'"
   },
   "repository": {
     "type": "git",

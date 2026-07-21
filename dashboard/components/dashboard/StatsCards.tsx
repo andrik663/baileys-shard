@@ -1,16 +1,15 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import type { Summary } from "@/lib/types";
 import {
   Wifi,
   WifiOff,
-  Loader2,
-  AlertCircle,
+  Layers,
   MessageSquare,
   Clock,
-  Layers,
   Activity,
+  Zap,
+  StopCircle,
 } from "lucide-react";
 
 function formatUptime(seconds: number): string {
@@ -21,91 +20,98 @@ function formatUptime(seconds: number): string {
   return `${h}h ${m}m`;
 }
 
-interface StatCardProps {
+interface StatTileProps {
   label: string;
   value: string | number;
   icon: React.ReactNode;
   accent?: string;
+  iconBg?: string;
   sub?: string;
 }
 
-function StatCard({ label, value, icon, accent = "text-muted-foreground", sub }: StatCardProps) {
+function StatTile({ label, value, icon, accent = "text-foreground", iconBg = "bg-muted/60", sub }: StatTileProps) {
   return (
-    <Card className="bg-card border-border/60">
-      <CardContent className="pt-5 pb-4 px-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-              {label}
-            </p>
-            <p className={`text-2xl font-bold tabular-nums ${accent}`}>{value}</p>
-            {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
-          </div>
-          <div className={`p-2.5 rounded-lg bg-muted/50 ${accent}`}>{icon}</div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="bg-card border border-border rounded-lg px-4 py-3 flex items-center gap-3">
+      <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0 ${accent}`}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1">{label}</p>
+        <p className={`text-xl font-bold tabular-nums leading-none ${accent}`}>{value}</p>
+        {sub && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{sub}</p>}
+      </div>
+    </div>
   );
 }
 
 export default function StatsCards({ summary }: { summary: Summary }) {
+  const offlineCount = summary.disconnected + summary.loggedOut;
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <StatCard
-        label="Total Shards"
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+      <StatTile
+        label="Total"
         value={summary.total}
-        icon={<Layers size={18} />}
+        icon={<Layers size={16} />}
         accent="text-foreground"
-        sub={`${summary.initializing} initializing`}
+        iconBg="bg-muted/60"
+        sub="all shards"
       />
-      <StatCard
+      <StatTile
         label="Connected"
         value={summary.connected}
-        icon={<Wifi size={18} />}
-        accent="text-[oklch(0.62_0.17_148)]"
-        sub={summary.connected > 0 ? "Active sessions" : "No active sessions"}
+        icon={<Wifi size={16} />}
+        accent="text-primary"
+        iconBg="bg-primary/12"
+        sub={summary.connected === 1 ? "1 active" : `${summary.connected} active`}
       />
-      <StatCard
-        label="Disconnected"
-        value={summary.disconnected + summary.loggedOut}
-        icon={<WifiOff size={18} />}
-        accent={summary.disconnected + summary.loggedOut > 0 ? "text-destructive" : "text-muted-foreground"}
-        sub={summary.loggedOut > 0 ? `${summary.loggedOut} logged out` : "All good"}
+      <StatTile
+        label="Offline"
+        value={offlineCount}
+        icon={<WifiOff size={16} />}
+        accent={offlineCount > 0 ? "text-destructive" : "text-muted-foreground"}
+        iconBg={offlineCount > 0 ? "bg-destructive/12" : "bg-muted/60"}
+        sub={summary.loggedOut > 0 ? `${summary.loggedOut} logged out` : "all good"}
       />
-      <StatCard
-        label="Messages"
-        value={summary.totalMessages.toLocaleString()}
-        icon={<MessageSquare size={18} />}
-        accent="text-[oklch(0.55_0.15_200)]"
-        sub="Total processed"
+      <StatTile
+        label="Starting"
+        value={summary.initializing}
+        icon={<Zap size={16} />}
+        accent={summary.initializing > 0 ? "text-[oklch(0.66_0.195_60)]" : "text-muted-foreground"}
+        iconBg={summary.initializing > 0 ? "bg-[oklch(0.66_0.195_60)]/12" : "bg-muted/60"}
+        sub="initializing"
       />
-      <StatCard
-        label="Events"
-        value={summary.totalEvents.toLocaleString()}
-        icon={<Activity size={18} />}
-        accent="text-foreground"
-        sub="All emitted events"
-      />
-      <StatCard
-        label="Uptime"
-        value={formatUptime(summary.uptime)}
-        icon={<Clock size={18} />}
-        accent="text-foreground"
-        sub="Since last restart"
-      />
-      <StatCard
+      <StatTile
         label="Stopped"
         value={summary.stopped}
-        icon={<AlertCircle size={18} />}
-        accent={summary.stopped > 0 ? "text-[oklch(0.65_0.20_60)]" : "text-muted-foreground"}
-        sub="Manually stopped"
+        icon={<StopCircle size={16} />}
+        accent={summary.stopped > 0 ? "text-[oklch(0.59_0.18_300)]" : "text-muted-foreground"}
+        iconBg={summary.stopped > 0 ? "bg-[oklch(0.59_0.18_300)]/12" : "bg-muted/60"}
+        sub="manually stopped"
       />
-      <StatCard
-        label="Initializing"
-        value={summary.initializing}
-        icon={<Loader2 size={18} className={summary.initializing > 0 ? "animate-spin" : ""} />}
-        accent={summary.initializing > 0 ? "text-[oklch(0.65_0.20_60)]" : "text-muted-foreground"}
-        sub="Starting up"
+      <StatTile
+        label="Messages"
+        value={summary.totalMessages.toLocaleString()}
+        icon={<MessageSquare size={16} />}
+        accent="text-[oklch(0.56_0.155_205)]"
+        iconBg="bg-[oklch(0.56_0.155_205)]/12"
+        sub="processed"
+      />
+      <StatTile
+        label="Events"
+        value={summary.totalEvents.toLocaleString()}
+        icon={<Activity size={16} />}
+        accent="text-foreground"
+        iconBg="bg-muted/60"
+        sub="emitted"
+      />
+      <StatTile
+        label="Uptime"
+        value={formatUptime(summary.uptime)}
+        icon={<Clock size={16} />}
+        accent="text-foreground"
+        iconBg="bg-muted/60"
+        sub="since restart"
       />
     </div>
   );
