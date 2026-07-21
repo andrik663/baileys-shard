@@ -1,4 +1,8 @@
 import { EventEmitter } from "events";
+import makeWASocket, {
+  DisconnectReason,
+  useMultiFileAuthState,
+} from "baileys";
 import type { BaileysEventMap } from "baileys";
 import Pino from "pino";
 import path from "path";
@@ -224,8 +228,7 @@ export default class ShardManager extends EventEmitter {
       if (connection === "close") {
         const isRegistered = sock?.authState?.creds?.registered ?? false;
         const statusCode = (lastDisconnect?.error as any)?.output?.statusCode;
-        const baileys = await import("baileys");
-        const shouldReconnect = statusCode !== baileys.DisconnectReason.loggedOut;
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
         if (!isRegistered || !shouldReconnect) {
           logger.warn(`Session ${id} closed and not registered or logged out, clearing...`);
@@ -281,9 +284,6 @@ export default class ShardManager extends EventEmitter {
 
   async createShard(options: IShardOptions = {}): Promise<{ id: string; sock: any }> {
     try {
-      const baileys = await import("baileys");
-      const { default: makeWASocket, useMultiFileAuthState } = baileys;
-  
       const currentShard = this.#shards.size;
       const id = options?.id || `shard-${currentShard + 1}`;
       const sessionDirectory = path.join(this.#sessionDirectory, id);
