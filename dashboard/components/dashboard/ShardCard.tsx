@@ -240,7 +240,7 @@ export default function ShardCard({
                 <DropdownMenuItem
                   className="text-xs gap-2 cursor-pointer text-destructive focus:text-destructive"
                   onClick={() => onStop(shard.id)}
-                  disabled={shard.status === "stopped"}
+                  disabled={shard.status === "stopped" || shard.status === "stopped"}
                 >
                   <StopCircle size={12} />
                   Stop Shard
@@ -348,7 +348,9 @@ export default function ShardCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 w-7 p-0 border-border/50 bg-surface hover:bg-destructive/15 hover:border-destructive/40 hover:text-destructive text-muted-foreground"
+                  className={`h-7 w-7 p-0 border-border/50 bg-surface hover:bg-destructive/15 hover:border-destructive/40 hover:text-destructive ${
+                    isBusy ? "text-destructive/70 border-destructive/30" : "text-muted-foreground"
+                  }`}
                   onClick={() => onStop(shard.id)}
                   disabled={shard.status === "stopped"}
                 >
@@ -357,7 +359,9 @@ export default function ShardCard({
                 </Button>
               }
             />
-            <TooltipContent side="bottom" className="text-xs">Stop shard</TooltipContent>
+            <TooltipContent side="bottom" className="text-xs">
+              {isBusy ? "Force stop connecting shard" : "Stop shard"}
+            </TooltipContent>
           </Tooltip>
 
           <Tooltip>

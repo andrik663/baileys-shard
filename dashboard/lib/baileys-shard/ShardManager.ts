@@ -58,6 +58,7 @@ export default class ShardManager extends EventEmitter {
   #shards: Map<string, any> = new Map();
   #shardsInfo: Map<string, ShardInfo> = new Map();
   #SocketConfig: Partial<ISocketConfig> = {};
+  #stoppedShards: Set<string> = new Set();
   private _patched?: boolean;
 
   constructor(config: IShardConfig = {}) {
@@ -240,6 +241,12 @@ export default class ShardManager extends EventEmitter {
       }
 
       if (connection === "close") {
+        // If the shard was intentionally stopped, do NOT auto-reconnect.
+        if (this.#stoppedShards.has(id)) {
+          logger.info(`Shard ${id} closed intentionally — skipping reconnect`);
+          return;
+        }
+
         const isRegistered = sock?.authState?.creds?.registered ?? false;
         const statusCode = (lastDisconnect?.error as any)?.output?.statusCode;
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
@@ -267,6 +274,8 @@ export default class ShardManager extends EventEmitter {
         });
 
         setTimeout(() => {
+          // Double-check that the shard hasn't been stopped during the delay.
+          if (this.#stoppedShards.has(id)) return;
           this.recreateShard({ id, ...options });
         }, 5000);
       }
@@ -395,6 +404,13 @@ export default class ShardManager extends EventEmitter {
     } = options;
     const maxRetries = 3;
 
+    // If shard was explicitly stopped, do not recreate it unless this is a
+    // manual user-initiated reconnect (forceRecreate = true).
+    if (this.#stoppedShards.has(id) && !forceRecreate) {
+      logger.info(`Shard ${id} is stopped — skipping recreate`);
+      return { id, sock: null };
+    }
+
     try {
       const sessionDirectory = path.join(this.#sessionDirectory, id);
 
@@ -486,27 +502,44 @@ export default class ShardManager extends EventEmitter {
     return await this.checkSessionStatus(sessionDirectory);
   }
 
+  clearStoppedFlag(id: string): void {
+    this.#stoppedShards.delete(id);
+  }
+
   async connect(id: string): Promise<{ id: string; sock: any }> {
+    // Manual connect — clear any stopped flag so reconnect is allowed.
+    this.#stoppedShards.delete(id);
     return wrapShardError(
       this.recreateShard.bind(this),
       id,
       "CONNECT_FAILED"
-    )({ id });
+    )({ id, forceRecreate: true });
   }
 
   async stopShard(id: string): Promise<boolean> {
+    // Mark as intentionally stopped FIRST so connection.update won't restart it.
+    this.#stoppedShards.add(id);
+
     const sock = this.#shards.get(id);
     if (!sock) {
-      const err = new ShardError(`Shard ${id} not found`, "SHARD_NOT_FOUND");
-      this.emit("shard.error", { shardId: id, error: err });
-      throw err;
+      // No active socket — shard may already be stopped. Mark it and return success.
+      this.#shardsInfo.get(id)?.update({ status: "stopped" });
+      this.emit("login.update", { shardId: id, state: "stopped" });
+      return true;
     }
 
     try {
-      if (sock.ws) sock.ws.close();
-      if (typeof sock.end === "function") sock.end();
+      // Close gracefully; errors here are non-fatal.
+      try {
+        if (sock.ws) sock.ws.close();
+      } catch (_) { /* ignore */ }
+      try {
+        if (typeof sock.end === "function") sock.end();
+      } catch (_) { /* ignore */ }
+
       this.#shards.delete(id);
       this.#shardsInfo.get(id)?.update({ status: "stopped" });
+      this.emit("login.update", { shardId: id, state: "stopped" });
       return true;
     } catch (err: any) {
       const shardErr = new ShardError(
