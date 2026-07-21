@@ -343,7 +343,7 @@ export default class ShardManager extends EventEmitter {
     clearSession?: boolean; 
     retryCount?: number; 
     forceRecreate?: boolean;
-  } & Partial<ShardOptions>): Promise<{ id: string; sock: any }> {
+  } & Partial<IShardOptions>): Promise<{ id: string; sock: any }> {
     const {
       id,
       clearSession = false,
@@ -513,11 +513,11 @@ export default class ShardManager extends EventEmitter {
     this._patched = true;
   }
 
-  getShardInfo(id: string): IShardInfo | null {
+  getShardInfo(id: string): ShardInfo | null {
     return this.#shardsInfo.get(id) || null;
   }
 
-  getAllShardInfo(): IShardInfo[] {
+  getAllShardInfo(): ShardInfo[] {
     return Array.from(this.#shardsInfo.values());
   }
 }
