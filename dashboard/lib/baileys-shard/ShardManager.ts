@@ -204,10 +204,6 @@ export default class ShardManager extends EventEmitter {
       });
     }
 
-    sock.ev.on("creds.update", (data: any) => {
-      this.emit("creds.update", { shardId: id, sock, data });
-    });
-
     sock.ev.on("connection.update", async (update: any) => {
       const { connection, lastDisconnect, qr } = update;
 
@@ -281,10 +277,10 @@ export default class ShardManager extends EventEmitter {
       }
     });
 
-    sock.ev.on("creds.update", async () => {
+    sock.ev.on("creds.update", async (data: any) => {
       try {
         await saveCreds();
-        this.emit("login.update", { shardId: id, state: "creds_saved" });
+        this.emit("creds.update", { shardId: id, sock, data });
       } catch (err: any) {
         logger.error(`Failed to save creds for ${id}: ${err.message}`);
         this.emit("shard.error", {

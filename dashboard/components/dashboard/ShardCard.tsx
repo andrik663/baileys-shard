@@ -57,12 +57,17 @@ interface StatusCfg {
   spinning?: boolean;
 }
 
-const STATUS_CONFIG: Record<string, StatusCfg> = {
+interface StatusCfgExtended extends StatusCfg {
+  dotColor: string; // raw CSS color value for inline styles
+}
+
+const STATUS_CONFIG: Record<string, StatusCfgExtended> = {
   connected: {
     label: "Connected",
     color: "text-[oklch(0.640_0.175_148)]",
     border: "border-[oklch(0.640_0.175_148/28%)]",
     dot: "bg-[oklch(0.640_0.175_148)]",
+    dotColor: "oklch(0.640 0.175 148)",
     glow: "glow-connected",
     pulse: true,
     icon: Wifi,
@@ -72,6 +77,7 @@ const STATUS_CONFIG: Record<string, StatusCfg> = {
     color: "text-destructive",
     border: "border-destructive/25",
     dot: "bg-destructive",
+    dotColor: "oklch(0.630 0.220 25)",
     glow: "glow-error",
     pulse: false,
     icon: WifiOff,
@@ -81,6 +87,7 @@ const STATUS_CONFIG: Record<string, StatusCfg> = {
     color: "text-[oklch(0.670_0.195_58)]",
     border: "border-[oklch(0.670_0.195_58/25%)]",
     dot: "bg-[oklch(0.670_0.195_58)]",
+    dotColor: "oklch(0.670 0.195 58)",
     glow: "glow-initializing",
     pulse: true,
     icon: Zap,
@@ -90,6 +97,7 @@ const STATUS_CONFIG: Record<string, StatusCfg> = {
     color: "text-[oklch(0.670_0.195_58)]",
     border: "border-[oklch(0.670_0.195_58/25%)]",
     dot: "bg-[oklch(0.670_0.195_58)]",
+    dotColor: "oklch(0.670 0.195 58)",
     glow: "glow-initializing",
     pulse: true,
     icon: Loader2,
@@ -100,6 +108,7 @@ const STATUS_CONFIG: Record<string, StatusCfg> = {
     color: "text-[oklch(0.585_0.182_300)]",
     border: "border-[oklch(0.585_0.182_300/25%)]",
     dot: "bg-[oklch(0.585_0.182_300)]",
+    dotColor: "oklch(0.585 0.182 300)",
     glow: "",
     pulse: false,
     icon: LogOut,
@@ -109,6 +118,7 @@ const STATUS_CONFIG: Record<string, StatusCfg> = {
     color: "text-muted-foreground",
     border: "border-border",
     dot: "bg-muted-foreground",
+    dotColor: "oklch(0.55 0.01 248)",
     glow: "",
     pulse: false,
     icon: StopCircle,
@@ -118,13 +128,14 @@ const STATUS_CONFIG: Record<string, StatusCfg> = {
     color: "text-destructive",
     border: "border-destructive/25",
     dot: "bg-destructive",
+    dotColor: "oklch(0.630 0.220 25)",
     glow: "glow-error",
     pulse: false,
     icon: WifiOff,
   },
 };
 
-const FALLBACK: StatusCfg = STATUS_CONFIG.stopped;
+const FALLBACK: StatusCfgExtended = STATUS_CONFIG.stopped;
 
 export default function ShardCard({
   shard,
@@ -135,7 +146,7 @@ export default function ShardCard({
   onDelete,
 }: Props) {
   const [showQR, setShowQR] = useState(false);
-  const cfg = STATUS_CONFIG[shard.status as keyof typeof STATUS_CONFIG] ?? FALLBACK;
+  const cfg: StatusCfgExtended = STATUS_CONFIG[shard.status as keyof typeof STATUS_CONFIG] ?? FALLBACK;
   const StatusIcon = cfg.icon;
   const isBusy = shard.status === "initializing" || shard.status === "connecting";
   const isConnected = shard.status === "connected";
@@ -169,10 +180,13 @@ export default function ShardCard({
               {cfg.pulse && (
                 <span
                   className="pulse-ring absolute inline-flex h-3 w-3 rounded-full opacity-40"
-                  style={{ background: cfg.dot.replace("bg-", "").replace("[", "").replace("]", "") }}
+                  style={{ backgroundColor: cfg.dotColor }}
                 />
               )}
-              <span className={`relative inline-flex w-2 h-2 rounded-full ${cfg.dot}`} />
+              <span
+                className="relative inline-flex w-2 h-2 rounded-full"
+                style={{ backgroundColor: cfg.dotColor }}
+              />
             </div>
 
             <div className="min-w-0 flex-1">
@@ -240,7 +254,7 @@ export default function ShardCard({
                 <DropdownMenuItem
                   className="text-xs gap-2 cursor-pointer text-destructive focus:text-destructive"
                   onClick={() => onStop(shard.id)}
-                  disabled={shard.status === "stopped" || shard.status === "stopped"}
+                  disabled={shard.status === "stopped"}
                 >
                   <StopCircle size={12} />
                   Stop Shard

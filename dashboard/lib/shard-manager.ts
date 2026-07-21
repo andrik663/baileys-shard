@@ -275,7 +275,7 @@ async function bootstrapManager() {
     });
 
     manager.on("shard.error", ({ shardId, error }: any) => {
-      dashboardState.updateShard(shardId ?? "unknown", { status: "error" as any });
+      dashboardState.updateShard(shardId ?? "unknown", { status: "error" });
       dashboardState.addLog({
         shardId: shardId ?? null,
         event: "shard.error",
