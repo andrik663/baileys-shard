@@ -53,12 +53,12 @@ export default class ShardManager extends EventEmitter {
   #sessionDirectory: string = "./sessions";
   #shards: Map<string, any> = new Map();
   #shardsInfo: Map<string, ShardInfo> = new Map();
-  #SocketConfig: ISocketConfig = {}
+  #SocketConfig: Partial<ISocketConfig> = {};
   private _patched?: boolean;
 
   constructor(config: IShardConfig = {}) {
     super();
-    this.#SocketConfig  = config?.socketConfig;
+    this.#SocketConfig = config?.socketConfig ?? {};
     this.#sessionDirectory = config?.session || this.#sessionDirectory;
     this.cleanupCorruptSessions().catch(err => {
       logger.error(`Failed to cleanup sessions on startup: ${err}`);
@@ -321,12 +321,13 @@ export default class ShardManager extends EventEmitter {
         logger.info(`Using existing registered session for ${id}`);
       }
   
+      const { auth: _omitAuth, ...restSocketConfig } = this.#SocketConfig;
       const sock = makeWASocket({
+        ...restSocketConfig,
+        ...options?.socket,
         auth: state,
         printQRInTerminal: !options?.phoneNumber,
         logger,
-        ...this.#SocketConfig,
-        ...options?.socket,
       });
   
       this.setupShardEventHandlers(sock, id, saveCreds, options);

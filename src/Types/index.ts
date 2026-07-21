@@ -1,10 +1,4 @@
-import {
-  AuthenticationState,
-  WAMessageKey,
-  FetchAgent,
-  MessageRetryMap,
-  SignalRepository
-} from "@whiskeysockets/baileys";
+import type { AuthenticationState } from "baileys";
 import { Logger } from "pino";
 
 export interface ISocketConfig {
@@ -17,8 +11,8 @@ export interface ISocketConfig {
   keepAliveIntervalMs?: number;
   retryRequestDelayMs?: number;
   maxMsgRetryCount?: number;
-  msgRetryCounterMap?: MessageRetryMap;
-  getMessage?: (key: WAMessageKey) => Promise<any>;
+  msgRetryCounterMap?: any;
+  getMessage?: (key: any) => Promise<any>;
   emitOwnEvents?: boolean;
   logger?: Logger;
   version?: [number, number, number];
@@ -26,9 +20,9 @@ export interface ISocketConfig {
   syncFullHistory?: boolean;
   fireInitQueries?: boolean;
   generateHighQualityLinkPreview?: boolean;
-  fetchAgent?: FetchAgent;
+  fetchAgent?: any;
   shouldIgnoreJid?: (jid: string) => boolean;
-  signalRepository?: SignalRepository;
+  signalRepository?: any;
   cachedGroupMetadata?: (jid: string) => Promise<any>;
   patchMessageBeforeSending?: (msg: any) => any;
   retryDelayMs?: (attempt: number) => number;
