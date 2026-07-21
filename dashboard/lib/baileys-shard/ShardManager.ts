@@ -16,10 +16,10 @@ import {
   ISocketConfig,
   IShardInfoUpdateFields,
   IConnectionUpdate,
-} from "../Types/index";
+} from "./Types";
 
-import ShardInfo from "../Utils/ShardInfo";
-import ShardError from "../Utils/Error";
+import ShardInfo from "./ShardInfo";
+import ShardError from "./ShardError";
 
 const logger = Pino(
   {
@@ -64,7 +64,7 @@ export default class ShardManager extends EventEmitter {
     super();
     this.#SocketConfig = config?.socketConfig ?? {};
     this.#sessionDirectory = config?.session || this.#sessionDirectory;
-    this.cleanupCorruptSessions().catch(err => {
+    this.cleanupCorruptSessions().catch((err) => {
       logger.error(`Failed to cleanup sessions on startup: ${err}`);
     });
   }
@@ -88,19 +88,19 @@ export default class ShardManager extends EventEmitter {
       try {
         creds = JSON.parse(raw);
       } catch (e) {
-        return { 
-          exists: true, 
-          registered: false, 
-          valid: false, 
-          reason: "Corrupt JSON" 
+        return {
+          exists: true,
+          registered: false,
+          valid: false,
+          reason: "Corrupt JSON",
         };
       }
 
       const isRegistered = creds?.registered === true;
-      
+
       const requiredFields = [
         "noiseKey",
-        "pairingEphemeralKeyPair", 
+        "pairingEphemeralKeyPair",
         "signedIdentityKey",
         "signedPreKey",
       ];
@@ -110,15 +110,14 @@ export default class ShardManager extends EventEmitter {
         exists: true,
         registered: isRegistered,
         valid: isRegistered && hasRequiredFields,
-        reason: !hasRequiredFields ? "Missing required fields" : undefined
+        reason: !hasRequiredFields ? "Missing required fields" : undefined,
       };
-      
     } catch (err) {
-      return { 
-        exists: true, 
-        registered: false, 
-        valid: false, 
-        reason: `Check error: ${err}` 
+      return {
+        exists: true,
+        registered: false,
+        valid: false,
+        reason: `Check error: ${err}`,
       };
     }
   }
@@ -126,17 +125,20 @@ export default class ShardManager extends EventEmitter {
   async validateAndCleanSession(sessionDirectory: string): Promise<void> {
     try {
       const status = await this.checkSessionStatus(sessionDirectory);
-      
+
       if (status.valid && status.registered) {
-        logger.info(`Session is valid and registered, keeping: ${sessionDirectory}`);
+        logger.info(
+          `Session is valid and registered, keeping: ${sessionDirectory}`
+        );
         return;
       }
 
       if (status.exists && (!status.registered || !status.valid)) {
-        logger.warn(`Cleaning invalid session (${status.reason}): ${sessionDirectory}`);
+        logger.warn(
+          `Cleaning invalid session (${status.reason}): ${sessionDirectory}`
+        );
         fs.rmSync(sessionDirectory, { recursive: true, force: true });
       }
-      
     } catch (err) {
       logger.error(`validateAndCleanSession error: ${err}`);
       if (fs.existsSync(sessionDirectory)) {
@@ -156,7 +158,12 @@ export default class ShardManager extends EventEmitter {
     }
   }
 
-  private setupShardEventHandlers(sock: any, id: string, saveCreds: any, options: IShardOptions) {
+  private setupShardEventHandlers(
+    sock: any,
+    id: string,
+    saveCreds: any,
+    options: IShardOptions
+  ) {
     this.#shards.set(id, sock);
     this.#shardsInfo.set(
       id,
@@ -205,14 +212,21 @@ export default class ShardManager extends EventEmitter {
 
       if (qr) {
         const image = qrcode.imageSync(qr, { type: "png", size: 10, margin: 1 });
-        this.emit("login.update", { shardId: id, state: "connecting", type: "qr", image });
+        this.emit("login.update", {
+          shardId: id,
+          state: "connecting",
+          type: "qr",
+          image,
+        });
       }
 
       if (connection === "open") {
         const isRegistered = sock?.authState?.creds?.registered ?? false;
 
         if (!isRegistered) {
-          logger.warn(`Session ${id} connected but not registered, recreating...`);
+          logger.warn(
+            `Session ${id} connected but not registered, recreating...`
+          );
           this.emit("login.update", {
             shardId: id,
             state: "logged_out",
@@ -231,12 +245,16 @@ export default class ShardManager extends EventEmitter {
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
         if (!isRegistered || !shouldReconnect) {
-          logger.warn(`Session ${id} closed and not registered or logged out, clearing...`);
+          logger.warn(
+            `Session ${id} closed and not registered or logged out, clearing...`
+          );
           this.#shardsInfo.get(id)?.update({ status: "logged_out" });
           this.emit("login.update", {
             shardId: id,
             state: "logged_out",
-            reason: !isRegistered ? "Session not registered" : "Logged out",
+            reason: !isRegistered
+              ? "Session not registered"
+              : "Logged out",
           });
           return await this.recreateShard({ id, ...options, clearSession: true });
         }
@@ -271,7 +289,12 @@ export default class ShardManager extends EventEmitter {
       setTimeout(async () => {
         try {
           const code = await sock.requestPairingCode(options.phoneNumber ?? "");
-          this.emit("login.update", { shardId: id, state: "connecting", type: "pairing", code });
+          this.emit("login.update", {
+            shardId: id,
+            state: "connecting",
+            type: "pairing",
+            code,
+          });
         } catch (err: any) {
           this.emit("shard.error", {
             shardId: id,
@@ -282,35 +305,48 @@ export default class ShardManager extends EventEmitter {
     }
   }
 
-  async createShard(options: IShardOptions = {}): Promise<{ id: string; sock: any }> {
+  async createShard(
+    options: IShardOptions = {}
+  ): Promise<{ id: string; sock: any }> {
     try {
       const currentShard = this.#shards.size;
       const id = options?.id || `shard-${currentShard + 1}`;
       const sessionDirectory = path.join(this.#sessionDirectory, id);
-  
+
       if (this.#shards.has(id)) {
         const existingShardInfo = this.#shardsInfo.get(id);
-        if (existingShardInfo?.status === "connected" || existingShardInfo?.status === "initializing") {
-          logger.info(`Shard ${id} already exists and active, returning existing instance`);
+        if (
+          existingShardInfo?.status === "connected" ||
+          existingShardInfo?.status === "initializing"
+        ) {
+          logger.info(
+            `Shard ${id} already exists and active, returning existing instance`
+          );
           return { id, sock: this.#shards.get(id) };
         }
       }
-  
+
       const sessionStatus = await this.checkSessionStatus(sessionDirectory);
-  
+
       if (sessionStatus.registered && sessionStatus.valid) {
-        logger.info(`Session ${id} is already registered and valid, reusing existing session`);
+        logger.info(
+          `Session ${id} is already registered and valid, reusing existing session`
+        );
       } else if (sessionStatus.exists && !sessionStatus.valid) {
-        logger.warn(`Session ${id} exists but invalid (${sessionStatus.reason}), cleaning...`);
+        logger.warn(
+          `Session ${id} exists but invalid (${sessionStatus.reason}), cleaning...`
+        );
         await this.validateAndCleanSession(sessionDirectory);
       } else if (!sessionStatus.exists) {
         logger.info(`Creating new session for ${id}`);
       }
-  
+
       let { state, saveCreds } = await useMultiFileAuthState(sessionDirectory);
-  
+
       if (state.creds?.registered === false) {
-        logger.warn(`Auth state shows not registered for ${id}, creating fresh session...`);
+        logger.warn(
+          `Auth state shows not registered for ${id}, creating fresh session...`
+        );
         if (fs.existsSync(sessionDirectory)) {
           fs.rmSync(sessionDirectory, { recursive: true, force: true });
         }
@@ -320,7 +356,7 @@ export default class ShardManager extends EventEmitter {
       } else if (state.creds?.registered === true) {
         logger.info(`Using existing registered session for ${id}`);
       }
-  
+
       const { auth: _omitAuth, ...restSocketConfig } = this.#SocketConfig;
       const sock = makeWASocket({
         ...restSocketConfig,
@@ -329,54 +365,67 @@ export default class ShardManager extends EventEmitter {
         printQRInTerminal: !options?.phoneNumber,
         logger,
       });
-  
+
       this.setupShardEventHandlers(sock, id, saveCreds, options);
       return { id, sock };
     } catch (err: any) {
-      const shardErr = new ShardError(`Failed to create shard: ${err.message}`, "CREATE_FAILED");
+      const shardErr = new ShardError(
+        `Failed to create shard: ${err.message}`,
+        "CREATE_FAILED"
+      );
       this.emit("shard.error", { shardId: options?.id, error: shardErr });
       throw shardErr;
     }
   }
 
-  async recreateShard(options: { 
-    id: string; 
-    clearSession?: boolean; 
-    retryCount?: number; 
-    forceRecreate?: boolean;
-  } & Partial<IShardOptions>): Promise<{ id: string; sock: any }> {
+  async recreateShard(
+    options: {
+      id: string;
+      clearSession?: boolean;
+      retryCount?: number;
+      forceRecreate?: boolean;
+    } & Partial<IShardOptions>
+  ): Promise<{ id: string; sock: any }> {
     const {
       id,
       clearSession = false,
       retryCount = 0,
       forceRecreate = false,
-      ...restOptions 
+      ...restOptions
     } = options;
     const maxRetries = 3;
-  
+
     try {
       const sessionDirectory = path.join(this.#sessionDirectory, id);
-  
+
       if (!forceRecreate && !clearSession) {
         const sessionStatus = await this.checkSessionStatus(sessionDirectory);
         if (sessionStatus.registered && sessionStatus.valid) {
-          logger.info(`Session ${id} is already registered and valid, skipping recreation`);
+          logger.info(
+            `Session ${id} is already registered and valid, skipping recreation`
+          );
           const oldSock = this.#shards.get(id);
           if (oldSock) {
             try {
               if (oldSock.ws) oldSock.ws.close();
               if (typeof oldSock.end === "function") oldSock.end();
             } catch (cleanupErr) {
-              logger.warn(`Error cleaning up old socket for ${id}: ${cleanupErr}`);
+              logger.warn(
+                `Error cleaning up old socket for ${id}: ${cleanupErr}`
+              );
             }
             this.#shards.delete(id);
             this.#shardsInfo.delete(id);
           }
           await new Promise((r) => setTimeout(r, 2000));
-          return await this.createShard({ id, socket: this.#SocketConfig, ...restOptions });
+          return await this.createShard({
+            id,
+            socket: this.#SocketConfig,
+            ...restOptions,
+          });
         }
       }
-  
+
       const oldSock = this.#shards.get(id);
       if (oldSock) {
         try {
@@ -388,7 +437,7 @@ export default class ShardManager extends EventEmitter {
         this.#shards.delete(id);
         this.#shardsInfo.delete(id);
       }
-  
+
       if (clearSession) {
         if (fs.existsSync(sessionDirectory)) {
           fs.rmSync(sessionDirectory, { recursive: true, force: true });
@@ -397,13 +446,19 @@ export default class ShardManager extends EventEmitter {
       } else {
         await this.validateAndCleanSession(sessionDirectory);
       }
-  
+
       await new Promise((r) => setTimeout(r, 2000));
-  
-      return await this.createShard({ id, socket: this.#SocketConfig, ...restOptions });
+
+      return await this.createShard({
+        id,
+        socket: this.#SocketConfig,
+        ...restOptions,
+      });
     } catch (err: any) {
       if (retryCount < maxRetries) {
-        logger.warn(`Retrying recreate shard ${id} (attempt ${retryCount + 1}/${maxRetries})`);
+        logger.warn(
+          `Retrying recreate shard ${id} (attempt ${retryCount + 1}/${maxRetries})`
+        );
         await new Promise((r) => setTimeout(r, 5000 * (retryCount + 1)));
         return await this.recreateShard({
           ...options,
@@ -411,7 +466,7 @@ export default class ShardManager extends EventEmitter {
           clearSession: retryCount >= 2,
         });
       }
-  
+
       const shardErr = new ShardError(
         `Failed to recreate shard after ${maxRetries} attempts: ${err.message}`,
         "RECREATE_FAILED"
@@ -430,9 +485,13 @@ export default class ShardManager extends EventEmitter {
     const sessionDirectory = path.join(this.#sessionDirectory, id);
     return await this.checkSessionStatus(sessionDirectory);
   }
-    
+
   async connect(id: string): Promise<{ id: string; sock: any }> {
-    return wrapShardError(this.recreateShard.bind(this), id, "CONNECT_FAILED")({ id });
+    return wrapShardError(
+      this.recreateShard.bind(this),
+      id,
+      "CONNECT_FAILED"
+    )({ id });
   }
 
   async stopShard(id: string): Promise<boolean> {
@@ -450,7 +509,10 @@ export default class ShardManager extends EventEmitter {
       this.#shardsInfo.get(id)?.update({ status: "stopped" });
       return true;
     } catch (err: any) {
-      const shardErr = new ShardError(`Failed to stop shard ${id}: ${err.message}`, "STOP_FAILED");
+      const shardErr = new ShardError(
+        `Failed to stop shard ${id}: ${err.message}`,
+        "STOP_FAILED"
+      );
       this.emit("shard.error", { shardId: id, error: shardErr });
       throw shardErr;
     }
@@ -481,7 +543,10 @@ export default class ShardManager extends EventEmitter {
 
       return ids;
     } catch (err: any) {
-      const shardErr = new ShardError(`Failed to load shards: ${err.message}`, "LOAD_FAILED");
+      const shardErr = new ShardError(
+        `Failed to load shards: ${err.message}`,
+        "LOAD_FAILED"
+      );
       this.emit("shard.error", { shardId: null, error: shardErr });
       return [];
     }

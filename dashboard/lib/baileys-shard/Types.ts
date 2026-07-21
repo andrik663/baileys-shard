@@ -35,7 +35,6 @@ export interface ISocketConfig {
   legacy?: boolean;
 }
 
-// ShardInfo Types
 export interface IShardInfoConstructorParams {
   id: string | number;
   index: number;
@@ -52,7 +51,6 @@ export interface IShardInfoUpdateFields {
   status?: string;
 }
 
-// ShardManager Types
 export interface IShardOptions {
   id?: string;
   phoneNumber?: string;
@@ -61,7 +59,7 @@ export interface IShardOptions {
 
 export interface IShardConfig {
   session?: string;
-  socketConfig?: ISocketConfig
+  socketConfig?: ISocketConfig;
 }
 
 export interface IConnectionUpdate {

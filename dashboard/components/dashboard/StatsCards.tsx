@@ -24,21 +24,58 @@ interface StatTileProps {
   label: string;
   value: string | number;
   icon: React.ReactNode;
-  accent?: string;
-  iconBg?: string;
+  accentColor?: string;       /* oklch(...) string */
+  dimmed?: boolean;
   sub?: string;
 }
 
-function StatTile({ label, value, icon, accent = "text-foreground", iconBg = "bg-muted/60", sub }: StatTileProps) {
+function StatTile({
+  label,
+  value,
+  icon,
+  accentColor,
+  dimmed = false,
+  sub,
+}: StatTileProps) {
+  const accent = accentColor ?? "oklch(0.485 0.012 245)";
+  const dimmedStyle = dimmed
+    ? { color: "oklch(0.485 0.012 245)" }
+    : { color: accent };
+
   return (
-    <div className="bg-card border border-border rounded-lg px-4 py-3 flex items-center gap-3">
-      <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0 ${accent}`}>
-        {icon}
+    <div className="relative overflow-hidden bg-card border border-border rounded-lg px-3.5 py-3 flex items-start gap-3 group hover:border-border/80 transition-colors">
+      {/* Left accent bar */}
+      {!dimmed && (
+        <div
+          className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full opacity-70"
+          style={{ background: accent }}
+        />
+      )}
+
+      {/* Icon */}
+      <div
+        className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5"
+        style={{
+          background: dimmed ? "oklch(1 0 0 / 4%)" : `color-mix(in oklch, ${accent} 12%, transparent)`,
+        }}
+      >
+        <span style={dimmedStyle}>{icon}</span>
       </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1">{label}</p>
-        <p className={`text-xl font-bold tabular-nums leading-none ${accent}`}>{value}</p>
-        {sub && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{sub}</p>}
+
+      {/* Text */}
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest leading-none mb-1.5">
+          {label}
+        </p>
+        <p
+          className="text-xl font-bold tabular-nums font-mono leading-none"
+          style={dimmedStyle}
+        >
+          {value}
+        </p>
+        {sub && (
+          <p className="text-[10px] text-muted-foreground mt-1 truncate leading-none">{sub}</p>
+        )}
       </div>
     </div>
   );
@@ -52,65 +89,64 @@ export default function StatsCards({ summary }: { summary: Summary }) {
       <StatTile
         label="Total"
         value={summary.total}
-        icon={<Layers size={16} />}
-        accent="text-foreground"
-        iconBg="bg-muted/60"
+        icon={<Layers size={15} />}
+        dimmed={summary.total === 0}
+        accentColor="oklch(0.920 0.006 245)"
         sub="all shards"
       />
       <StatTile
         label="Connected"
         value={summary.connected}
-        icon={<Wifi size={16} />}
-        accent="text-primary"
-        iconBg="bg-primary/12"
-        sub={summary.connected === 1 ? "1 active" : `${summary.connected} active`}
+        icon={<Wifi size={15} />}
+        accentColor="oklch(0.640 0.175 148)"
+        dimmed={summary.connected === 0}
+        sub={`${summary.connected} active`}
       />
       <StatTile
         label="Offline"
         value={offlineCount}
-        icon={<WifiOff size={16} />}
-        accent={offlineCount > 0 ? "text-destructive" : "text-muted-foreground"}
-        iconBg={offlineCount > 0 ? "bg-destructive/12" : "bg-muted/60"}
+        icon={<WifiOff size={15} />}
+        accentColor="oklch(0.630 0.220 25)"
+        dimmed={offlineCount === 0}
         sub={summary.loggedOut > 0 ? `${summary.loggedOut} logged out` : "all good"}
       />
       <StatTile
         label="Starting"
         value={summary.initializing}
-        icon={<Zap size={16} />}
-        accent={summary.initializing > 0 ? "text-[oklch(0.66_0.195_60)]" : "text-muted-foreground"}
-        iconBg={summary.initializing > 0 ? "bg-[oklch(0.66_0.195_60)]/12" : "bg-muted/60"}
+        icon={<Zap size={15} />}
+        accentColor="oklch(0.670 0.195 58)"
+        dimmed={summary.initializing === 0}
         sub="initializing"
       />
       <StatTile
         label="Stopped"
         value={summary.stopped}
-        icon={<StopCircle size={16} />}
-        accent={summary.stopped > 0 ? "text-[oklch(0.59_0.18_300)]" : "text-muted-foreground"}
-        iconBg={summary.stopped > 0 ? "bg-[oklch(0.59_0.18_300)]/12" : "bg-muted/60"}
+        icon={<StopCircle size={15} />}
+        accentColor="oklch(0.585 0.182 300)"
+        dimmed={summary.stopped === 0}
         sub="manually stopped"
       />
       <StatTile
         label="Messages"
         value={summary.totalMessages.toLocaleString()}
-        icon={<MessageSquare size={16} />}
-        accent="text-[oklch(0.56_0.155_205)]"
-        iconBg="bg-[oklch(0.56_0.155_205)]/12"
+        icon={<MessageSquare size={15} />}
+        accentColor="oklch(0.555 0.155 210)"
+        dimmed={summary.totalMessages === 0}
         sub="processed"
       />
       <StatTile
         label="Events"
         value={summary.totalEvents.toLocaleString()}
-        icon={<Activity size={16} />}
-        accent="text-foreground"
-        iconBg="bg-muted/60"
+        icon={<Activity size={15} />}
+        accentColor="oklch(0.920 0.006 245)"
+        dimmed={summary.totalEvents === 0}
         sub="emitted"
       />
       <StatTile
         label="Uptime"
         value={formatUptime(summary.uptime)}
-        icon={<Clock size={16} />}
-        accent="text-foreground"
-        iconBg="bg-muted/60"
+        icon={<Clock size={15} />}
+        accentColor="oklch(0.920 0.006 245)"
         sub="since restart"
       />
     </div>
