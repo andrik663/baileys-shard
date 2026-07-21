@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "buildCommand": "cd dashboard && npm install && npm run build",
+  "outputDirectory": "dashboard/.next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
+    }
+  ]
+}
