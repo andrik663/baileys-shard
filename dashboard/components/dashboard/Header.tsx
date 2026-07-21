@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
@@ -14,10 +13,10 @@ import {
   FolderOpen,
   Wifi,
   WifiOff,
-  Layers,
   Zap,
   StopCircle,
-  AlertCircle,
+  Clock,
+  Layers,
 } from "lucide-react";
 import type { Summary } from "@/lib/types";
 
@@ -31,8 +30,30 @@ interface Props {
 
 function formatUptime(s: number) {
   if (s < 60) return `${s}s`;
-  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`;
   return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+}
+
+function StatPill({
+  icon,
+  value,
+  label,
+  color = "text-muted-foreground",
+}: {
+  icon: React.ReactNode;
+  value: number | string;
+  label?: string;
+  color?: string;
+}) {
+  return (
+    <div className={`flex items-center gap-1.5 flex-shrink-0 ${color}`}>
+      {icon}
+      <span className="font-mono text-xs font-semibold tabular-nums">{value}</span>
+      {label && (
+        <span className="text-[11px] text-muted-foreground hidden sm:inline">{label}</span>
+      )}
+    </div>
+  );
 }
 
 export default function Header({
@@ -42,89 +63,113 @@ export default function Header({
   onCreateShard,
   onLoadAll,
 }: Props) {
-  const hasOffline = summary.disconnected + summary.loggedOut > 0;
+  const offlineCount = summary.disconnected + summary.loggedOut;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-sidebar/95 backdrop-blur-md">
-      <div className="max-w-screen-2xl mx-auto px-4 h-12 flex items-center gap-3">
-        {/* Brand */}
+    <header className="sticky top-0 z-50 border-b border-border bg-[oklch(0.080_0.006_250/97%)] backdrop-blur-xl">
+      <div className="max-w-screen-2xl mx-auto px-4 h-11 flex items-center gap-3">
+
+        {/* Brand mark */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
-          <div className="w-7 h-7 rounded-md bg-primary/20 border border-primary/30 flex items-center justify-center">
-            <Layers size={14} className="text-primary" />
+          <div className="relative w-6 h-6 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-md bg-primary/20 border border-primary/35" />
+            <Layers size={12} className="text-primary relative" />
           </div>
-          <div className="hidden sm:block">
-            <span className="text-sm font-bold text-foreground leading-none">Baileys<span className="text-primary">Shard</span></span>
-            <span className="text-xs text-muted-foreground ml-1.5 hidden md:inline">Manager</span>
+          <div className="hidden sm:flex items-baseline gap-1">
+            <span className="text-[13px] font-bold tracking-tight text-foreground">
+              baileys<span className="text-primary">-shard</span>
+            </span>
+            <span className="text-[10px] text-muted-foreground font-mono hidden lg:inline opacity-60">
+              v0.0.7
+            </span>
           </div>
         </div>
 
-        <Separator orientation="vertical" className="h-5 mx-1 opacity-40 hidden sm:block" />
+        <Separator orientation="vertical" className="h-4 opacity-25 hidden sm:block flex-shrink-0" />
 
-        {/* Live status strip */}
-        <div className="flex items-center gap-2 flex-1 overflow-x-auto no-scrollbar">
-          {/* Live indicator */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-dot" />
-            <span className="text-xs text-muted-foreground font-medium hidden sm:inline">Live</span>
-          </div>
+        {/* Live indicator */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="pulse-ring absolute inline-flex h-full w-full rounded-full bg-primary opacity-50" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+          </span>
+          <span className="text-[11px] text-muted-foreground font-mono hidden sm:inline">LIVE</span>
+        </div>
 
-          <Separator orientation="vertical" className="h-4 opacity-30 flex-shrink-0" />
+        <Separator orientation="vertical" className="h-4 opacity-20 flex-shrink-0" />
 
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="text-xs text-muted-foreground">Shards</span>
-            <Badge variant="secondary" className="h-4 px-1.5 text-xs font-mono">
-              {summary.total}
-            </Badge>
-          </div>
+        {/* Stats strip */}
+        <div className="flex items-center gap-3 flex-1 overflow-x-auto no-scrollbar">
+          <StatPill
+            icon={<Layers size={11} />}
+            value={summary.total}
+            label="shards"
+            color="text-foreground"
+          />
 
           {summary.connected > 0 && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Wifi size={11} className="text-primary" />
-              <span className="text-xs text-primary font-medium tabular-nums">{summary.connected}</span>
-            </div>
+            <>
+              <Separator orientation="vertical" className="h-3 opacity-20 flex-shrink-0" />
+              <StatPill
+                icon={<Wifi size={11} />}
+                value={summary.connected}
+                label="online"
+                color="text-primary"
+              />
+            </>
           )}
 
-          {hasOffline && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <WifiOff size={11} className="text-destructive" />
-              <span className="text-xs text-destructive font-medium tabular-nums">
-                {summary.disconnected + summary.loggedOut}
-              </span>
-            </div>
+          {offlineCount > 0 && (
+            <>
+              <Separator orientation="vertical" className="h-3 opacity-20 flex-shrink-0" />
+              <StatPill
+                icon={<WifiOff size={11} />}
+                value={offlineCount}
+                label="offline"
+                color="text-destructive"
+              />
+            </>
           )}
 
           {summary.initializing > 0 && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Zap size={11} className="text-[oklch(0.66_0.195_60)]" />
-              <span className="text-xs text-[oklch(0.66_0.195_60)] font-medium tabular-nums">
-                {summary.initializing}
-              </span>
-            </div>
+            <>
+              <Separator orientation="vertical" className="h-3 opacity-20 flex-shrink-0" />
+              <StatPill
+                icon={<Zap size={11} />}
+                value={summary.initializing}
+                label="starting"
+                color="text-[oklch(0.670_0.195_58)]"
+              />
+            </>
           )}
 
           {summary.stopped > 0 && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <StopCircle size={11} className="text-muted-foreground" />
-              <span className="text-xs text-muted-foreground tabular-nums">{summary.stopped}</span>
-            </div>
+            <>
+              <Separator orientation="vertical" className="h-3 opacity-20 flex-shrink-0" />
+              <StatPill
+                icon={<StopCircle size={11} />}
+                value={summary.stopped}
+                label="stopped"
+                color="text-muted-foreground"
+              />
+            </>
           )}
 
-          <Separator orientation="vertical" className="h-4 opacity-30 flex-shrink-0" />
+          <Separator orientation="vertical" className="h-3 opacity-20 flex-shrink-0" />
 
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <AlertCircle size={11} className="text-muted-foreground" />
-            <span className="text-xs text-muted-foreground tabular-nums hidden sm:inline">
-              Uptime:
-            </span>
-            <span className="text-xs text-foreground font-mono">{formatUptime(summary.uptime)}</span>
-          </div>
+          <StatPill
+            icon={<Clock size={11} />}
+            value={formatUptime(summary.uptime)}
+            label="uptime"
+            color="text-muted-foreground"
+          />
 
           {summary.totalMessages > 0 && (
             <>
-              <Separator orientation="vertical" className="h-4 opacity-30 flex-shrink-0" />
-              <span className="text-xs text-muted-foreground flex-shrink-0">
+              <Separator orientation="vertical" className="h-3 opacity-20 flex-shrink-0" />
+              <span className="text-[11px] text-muted-foreground flex-shrink-0 hidden md:flex items-center gap-1">
                 <span className="font-mono text-foreground">{summary.totalMessages.toLocaleString()}</span>
-                {" msgs"}
+                msgs
               </span>
             </>
           )}
@@ -137,15 +182,15 @@ export default function Header({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-surface-2"
                 onClick={onRefresh}
                 disabled={loading}
               >
-                <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+                <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
                 <span className="sr-only">Refresh</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Refresh</TooltipContent>
+            <TooltipContent side="bottom" className="text-xs">Refresh</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -153,25 +198,27 @@ export default function Header({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 px-3 text-xs gap-1.5 border-border/60"
+                className="h-7 px-2.5 text-[11px] gap-1.5 border-border/50 bg-surface hover:bg-surface-2 font-mono"
                 onClick={onLoadAll}
                 disabled={loading}
               >
-                <FolderOpen size={12} />
+                <FolderOpen size={11} />
                 <span className="hidden md:inline">Load Sessions</span>
                 <span className="inline md:hidden">Load</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Load all existing sessions from disk</TooltipContent>
+            <TooltipContent side="bottom" className="text-xs">
+              Load all existing sessions from disk
+            </TooltipContent>
           </Tooltip>
 
           <Button
             size="sm"
-            className="h-8 px-3 text-xs gap-1.5"
+            className="h-7 px-3 text-[11px] gap-1.5 bg-primary hover:bg-primary/90 font-semibold"
             onClick={onCreateShard}
             disabled={loading}
           >
-            <Plus size={13} />
+            <Plus size={12} />
             <span className="hidden sm:inline">New Shard</span>
           </Button>
         </div>
