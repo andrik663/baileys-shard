@@ -178,35 +178,39 @@ export default function Header({
         {/* Actions */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-surface-2"
-                onClick={onRefresh}
-                disabled={loading}
-              >
-                <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
-                <span className="sr-only">Refresh</span>
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-surface-2"
+                  onClick={onRefresh}
+                  disabled={loading}
+                >
+                  <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+                  <span className="sr-only">Refresh</span>
+                </Button>
+              }
+            />
             <TooltipContent side="bottom" className="text-xs">Refresh</TooltipContent>
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 px-2.5 text-[11px] gap-1.5 border-border/50 bg-surface hover:bg-surface-2 font-mono"
-                onClick={onLoadAll}
-                disabled={loading}
-              >
-                <FolderOpen size={11} />
-                <span className="hidden md:inline">Load Sessions</span>
-                <span className="inline md:hidden">Load</span>
-              </Button>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2.5 text-[11px] gap-1.5 border-border/50 bg-surface hover:bg-surface-2 font-mono"
+                  onClick={onLoadAll}
+                  disabled={loading}
+                >
+                  <FolderOpen size={11} />
+                  <span className="hidden md:inline">Load Sessions</span>
+                  <span className="inline md:hidden">Load</span>
+                </Button>
+              }
+            />
             <TooltipContent side="bottom" className="text-xs">
               Load all existing sessions from disk
             </TooltipContent>

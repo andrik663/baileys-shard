@@ -145,7 +145,7 @@ export default function EventLog({ logs, onClear }: Props) {
               className="h-7 pl-7 text-xs bg-muted/30 border-border/60"
             />
           </div>
-          <Select value={levelFilter} onValueChange={setLevelFilter}>
+          <Select value={levelFilter} onValueChange={(v) => setLevelFilter(v ?? "all")}>
             <SelectTrigger className="h-7 w-28 text-xs bg-muted/30 border-border/60">
               <SelectValue placeholder="Level" />
             </SelectTrigger>
@@ -158,7 +158,7 @@ export default function EventLog({ logs, onClear }: Props) {
             </SelectContent>
           </Select>
           {shardIds.length > 0 && (
-            <Select value={shardFilter} onValueChange={setShardFilter}>
+            <Select value={shardFilter} onValueChange={(v) => setShardFilter(v ?? "all")}>
               <SelectTrigger className="h-7 w-32 text-xs bg-muted/30 border-border/60">
                 <SelectValue placeholder="Shard" />
               </SelectTrigger>
