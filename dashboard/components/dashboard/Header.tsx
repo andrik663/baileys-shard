@@ -67,10 +67,10 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-[oklch(0.080_0.006_250/97%)] backdrop-blur-xl">
-      <div className="max-w-screen-2xl mx-auto px-4 h-11 flex items-center gap-3">
+      <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 h-11 flex items-center gap-2 sm:gap-3">
 
         {/* Brand mark */}
-        <div className="flex items-center gap-2.5 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <div className="relative w-6 h-6 flex items-center justify-center">
             <div className="absolute inset-0 rounded-md bg-primary/20 border border-primary/35" />
             <Layers size={12} className="text-primary relative" />
@@ -88,7 +88,7 @@ export default function Header({
         <Separator orientation="vertical" className="h-4 opacity-25 hidden sm:block flex-shrink-0" />
 
         {/* Live indicator */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0">
           <span className="relative flex h-1.5 w-1.5">
             <span className="pulse-ring absolute inline-flex h-full w-full rounded-full bg-primary opacity-50" />
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
@@ -96,14 +96,13 @@ export default function Header({
           <span className="text-[11px] text-muted-foreground font-mono hidden sm:inline">LIVE</span>
         </div>
 
-        <Separator orientation="vertical" className="h-4 opacity-20 flex-shrink-0" />
+        <Separator orientation="vertical" className="h-4 opacity-20 flex-shrink-0 hidden sm:block" />
 
-        {/* Stats strip */}
-        <div className="flex items-center gap-3 flex-1 overflow-x-auto no-scrollbar">
+        {/* Stats strip — horizontally scrollable on mobile */}
+        <div className="flex items-center gap-2.5 flex-1 overflow-x-auto no-scrollbar min-w-0">
           <StatPill
             icon={<Layers size={11} />}
             value={summary.total}
-            label="shards"
             color="text-foreground"
           />
 
@@ -125,7 +124,6 @@ export default function Header({
               <StatPill
                 icon={<WifiOff size={11} />}
                 value={offlineCount}
-                label="offline"
                 color="text-destructive"
               />
             </>
@@ -137,46 +135,21 @@ export default function Header({
               <StatPill
                 icon={<Zap size={11} />}
                 value={summary.initializing}
-                label="starting"
                 color="text-[oklch(0.670_0.195_58)]"
               />
             </>
           )}
 
-          {summary.stopped > 0 && (
-            <>
-              <Separator orientation="vertical" className="h-3 opacity-20 flex-shrink-0" />
-              <StatPill
-                icon={<StopCircle size={11} />}
-                value={summary.stopped}
-                label="stopped"
-                color="text-muted-foreground"
-              />
-            </>
-          )}
-
           <Separator orientation="vertical" className="h-3 opacity-20 flex-shrink-0" />
-
           <StatPill
             icon={<Clock size={11} />}
             value={formatUptime(summary.uptime)}
-            label="uptime"
             color="text-muted-foreground"
           />
-
-          {summary.totalMessages > 0 && (
-            <>
-              <Separator orientation="vertical" className="h-3 opacity-20 flex-shrink-0" />
-              <span className="text-[11px] text-muted-foreground flex-shrink-0 hidden md:flex items-center gap-1">
-                <span className="font-mono text-foreground">{summary.totalMessages.toLocaleString()}</span>
-                msgs
-              </span>
-            </>
-          )}
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
           <Tooltip>
             <TooltipTrigger
               render={
@@ -201,13 +174,12 @@ export default function Header({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 px-2.5 text-[11px] gap-1.5 border-border/50 bg-surface hover:bg-surface-2 font-mono"
+                  className="h-7 w-7 sm:w-auto sm:px-2.5 p-0 text-[11px] gap-1.5 border-border/50 bg-surface hover:bg-surface-2 font-mono"
                   onClick={onLoadAll}
                   disabled={loading}
                 >
                   <FolderOpen size={11} />
-                  <span className="hidden md:inline">Load Sessions</span>
-                  <span className="inline md:hidden">Load</span>
+                  <span className="hidden sm:inline">Load</span>
                 </Button>
               }
             />
@@ -218,7 +190,7 @@ export default function Header({
 
           <Button
             size="sm"
-            className="h-7 px-3 text-[11px] gap-1.5 bg-primary hover:bg-primary/90 font-semibold"
+            className="h-7 w-7 sm:w-auto sm:px-3 p-0 text-[11px] gap-1.5 bg-primary hover:bg-primary/90 font-semibold"
             onClick={onCreateShard}
             disabled={loading}
           >

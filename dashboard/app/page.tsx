@@ -204,15 +204,15 @@ export default function DashboardPage() {
         onLoadAll={handleLoadAll}
       />
 
-      <main className="flex-1 max-w-screen-xl mx-auto w-full px-4 py-5 space-y-4">
+      <main className="flex-1 max-w-screen-xl mx-auto w-full px-3 sm:px-4 py-3 sm:py-5 space-y-3 sm:space-y-4">
         {/* Stats */}
         <StatsCards summary={summary} />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="!flex-col !gap-0 w-full">
-          {/* Tab bar */}
-          <div className="border-b border-border">
-            <TabsList className="bg-transparent h-auto gap-0 p-0 rounded-none">
+          {/* Tab bar — scrollable on mobile */}
+          <div className="border-b border-border overflow-x-auto no-scrollbar">
+            <TabsList className="bg-transparent h-auto gap-0 p-0 rounded-none flex w-max min-w-full">
               {[
                 {
                   value: "shards",
@@ -223,7 +223,7 @@ export default function DashboardPage() {
                 },
                 {
                   value: "logs",
-                  label: "Event Log",
+                  label: "Logs",
                   icon: <Activity size={12} />,
                   badge: errorCount > 0 ? String(errorCount) : null,
                   badgeVariant: "error" as const,
@@ -254,8 +254,8 @@ export default function DashboardPage() {
                   key={tab.value}
                   value={tab.value}
                   className={`
-                    relative h-9 px-3.5 text-[11px] font-mono font-semibold rounded-none border-b-2 border-transparent
-                    text-muted-foreground hover:text-foreground transition-colors gap-1.5
+                    relative h-9 px-3 sm:px-3.5 text-[11px] font-mono font-semibold rounded-none border-b-2 border-transparent
+                    text-muted-foreground hover:text-foreground transition-colors gap-1.5 whitespace-nowrap flex-shrink-0
                     data-[state=active]:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent
                   `}
                 >
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                 onLoadAll={handleLoadAll}
               />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 auto-rows-fr">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 auto-rows-fr">
                 {shards.map((shard) => (
                   <ShardCard
                     key={shard.id}
@@ -322,13 +322,14 @@ export default function DashboardPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-2.5 px-4">
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground font-mono">
-            baileys-shard v0.0.7 &mdash; multi-session WhatsApp management
+      <footer className="border-t border-border/50 py-2.5 px-3 sm:px-4">
+        <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-2">
+          <span className="text-[10px] text-muted-foreground font-mono truncate">
+            <span className="hidden sm:inline">baileys-shard v0.0.7 &mdash; multi-session WhatsApp management</span>
+            <span className="sm:hidden">baileys-shard v0.0.7</span>
           </span>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] text-muted-foreground font-mono">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <span className="text-[10px] text-muted-foreground font-mono hidden sm:inline">
               refresh: 3s
             </span>
             <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
@@ -388,7 +389,8 @@ export default function DashboardPage() {
       {toast && (
         <div
           className={`
-            fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-lg
+            fixed bottom-4 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 sm:max-w-xs z-50
+            flex items-center gap-2.5 px-4 py-3 rounded-lg
             text-xs font-mono font-medium shadow-2xl border slide-up
             ${
               toast.level === "error"

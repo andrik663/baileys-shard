@@ -57,7 +57,7 @@ export default function CreateShardModal({ open, onClose, onCreated }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-md bg-card border-border/60">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md bg-card border-border/60 max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus size={18} className="text-primary" />
